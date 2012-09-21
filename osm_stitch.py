@@ -3,9 +3,8 @@
 import math
 import httplib
 import sys
+import tempfile
 from PIL import Image
-
-tmp_location = '/tmp/'
 
 if not len(sys.argv) > 6:
     raise SystemExit("Usage: upper_lat upper_lon lower_lat lower_lon zoom output_file")
@@ -17,6 +16,7 @@ lower_lon = float(sys.argv[4])
 zoom = int(sys.argv[5])
 output = sys.argv[6]
 sub = ''
+tmp_location = tempfile.gettempdir() + '/'
 
 def deg2num(lat_deg, lon_deg, zoom):
     lat_rad = math.radians(lat_deg)
