@@ -5,6 +5,8 @@ import httplib
 import sys
 from PIL import Image
 
+tmp_location = '/tmp/'
+
 if not len(sys.argv) > 6:
     raise SystemExit("Usage: upper_lat upper_lon lower_lat lower_lon zoom output_file")
 
@@ -14,10 +16,6 @@ lower_lat = float(sys.argv[3])
 lower_lon = float(sys.argv[4])
 zoom = int(sys.argv[5])
 output = sys.argv[6]
-#upper_lat = 30.690502
-#upper_lon = -84.418142
-#lower_lat = 30.099011
-#lower_lon = -84.003676
 sub = ''
 
 def deg2num(lat_deg, lon_deg, zoom):
@@ -38,18 +36,18 @@ def writetile(x, y, zoom):
     file_name = str(x) + '_' + str(y) + '.png'
     conn = httplib.HTTPConnection(sub + '.tile.openstreetmap.org')
     print('Retrieving /' + str(zoom) + '/' + str(x) + '/' + str(y) + '.png')
+    conn.addheaders = [('User-agent', 'Mozilla/5.0')]
     conn.request('GET', '/' + str(zoom) + '/' + str(x) + '/' + str(y) + '.png')
     response = conn.getresponse()
-    conn.close()
-
     if response.status == 200 and response.reason == 'OK':
         print('/' + str(zoom) + '/' + str(x) + '/' + str(y) + '.png retrieved')
-        f = open('/tmp/' + file_name, 'w')
+        f = open(tmp_location + file_name, 'w')
         f.write(response.read())
         f.close()
     else:
         print('/' + str(zoom) + '/' + str(x) + '/' + str(y) + '.png failed')
         print(str(response.status) + ' ' + response.reason)
+    conn.close()
     return file_name
 
 top_left = deg2num(upper_lat, upper_lon, zoom)
@@ -61,8 +59,9 @@ osm_map = Image.new("RGBA", (width, height))
 
 for x in range(top_left[0], bottom_right[0]):
     for y in range(top_left[1], bottom_right[1]):
-        foo = Image.open('/tmp/' + writetile(x, y, zoom))
+        foo = Image.open(tmp_location + writetile(x, y, zoom))
         osm_map.paste(foo, (256 * (x - top_left[0]), 256 * (y - top_left[1])))
+        writetile(x, y, zoom)
 
-print('Saving map')
+print('Saving map to ' + output + '/map.png')
 osm_map.save(output + '/map.png')
